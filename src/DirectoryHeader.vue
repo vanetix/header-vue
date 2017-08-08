@@ -90,13 +90,13 @@ export default {
   },
 
   computed: {
-    ...mapGetters(['isLoaded']),
-    ...mapState(['user', 'application', 'applications', 'userApplications']),
+    ...mapGetters(['isLoaded', 'getUserApplications']),
+    ...mapState(['user', 'application', 'applications']),
 
     displayedUserApplications() {
       const currentApplication = this.application.name;
 
-      return this.userApplications.filter(({ name }) => {
+      return this.getUserApplications.filter(({ name }) => {
         return name !== currentApplication;
       });
     },

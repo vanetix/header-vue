@@ -31,6 +31,17 @@ const state = {
 const getters = {
   isLoaded({ applications }) {
     return applications.length > 0;
+  },
+
+  /**
+   * TODO: Convert applications to a map for fast access
+   *
+   * @param {Object} state
+   */
+  getUserApplications({ userApplications, applications }) {
+    return applications.filter(({ id }) => {
+      return userApplications.some(({ clientId }) => clientId === id);
+    });
   }
 };
 
@@ -42,12 +53,66 @@ const mutations = {
     };
   },
 
-  setApplications(state, data) {
-    state.applications = data.sort(lexSort('name'));
+  /**
+   * Takes an Object which represents a raw response from the API,
+   * and commits it into the store.
+   *
+   * Example `data`:
+   *
+   * {
+   *   type: "client",
+   *   id: "client_id",
+   *   attributes: {
+   *     name: "Client",
+   *     href: "https://client.com"
+   *   }
+   * }
+   *
+   * @param {Object} state
+   * @param {Object} data
+   */
+  setApplications(state, { data }) {
+    const applications = data.map((application) => {
+      const { id, attributes: { name, href } } = application;
+
+      return {
+        id,
+        name,
+        href
+      };
+    });
+
+    state.applications = applications.sort(lexSort('name'));
   },
 
-  setUserApplications(state, data) {
-    state.userApplications = data.sort(lexSort('name'));
+  /**
+   * Takes an Object which represents a raw response from the API,
+   * and commits it into the store.
+   *
+   * Example `data`:
+   *
+   * {
+   *   type: "user-client",
+   *   id: "1",
+   *   attributes: {
+   *     user_id: "Client",
+   *     client_id: "https://client.com"
+   *   }
+   * }
+   *
+   * @param {Object} state
+   * @param {Object} data
+   */
+  setUserApplications(state, { data }) {
+    state.userApplications = data.map((application) => {
+      const { id, attributes } = application;
+
+      return {
+        id,
+        userId: attributes['user-id'],
+        clientId: attributes['client-id']
+      };
+    });
   }
 };
 
@@ -63,16 +128,28 @@ const actions = {
     commit('setUserApplications', userApplications);
   },
 
-  fetchApplications({ commit }) {
-    axios.get("http://localhost:4000/clients").then(({ data }) => {
+  fetchApplications({ commit, state }) {
+    const { token } = state.user;
+
+    axios.get("http://localhost:4000/clients", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }).then(({ data }) => {
       commit('setApplications', data);
     }, (error) => {
       console.error(error);
     });
   },
 
-  fetchUserApplications({ commit }) {
-    axios.get("http://localhost:4000/me").then(({ data }) => {
+  fetchUserApplications({ commit, state }) {
+    const { token } = state.user;
+
+    axios.get("http://localhost:4000/me", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }).then(({ data }) => {
       commit('setUserApplications', data);
     }, (error) => {
       console.error(error);
