@@ -1,10 +1,16 @@
 import Vue from 'vue';
-import Vuex from 'vuex';
+import { mapActions } from 'vuex';
 import store from './store';
 import DirectoryHeader from './DirectoryHeader.vue';
 
-new Vue({
-  store,
-  el: '#directory-header',
-  render: h => h(DirectoryHeader)
-});
+window.initializeHeader = (configuration = {}) => {
+  const el = configuration.el || '#directory-header';
+
+  store.dispatch('initialize', configuration);
+
+  return new Vue({
+    el,
+    store,
+    render: h => h(DirectoryHeader)
+  });
+}

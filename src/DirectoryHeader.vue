@@ -24,9 +24,12 @@ Main component for rendering out the header to the page.
             </template>
           </dropdown>
         </li>
+      </ul>
 
+      <ul class="directory-header__menu" @dragover.prevent
+        @drop="addUserApplication($event.dataTransfer.getData('text/plain'))">
         <li v-for="a in displayedUserApplications">
-          <application-link :application="a"></application-link>
+          <application-link :application="a" :removable="true"></application-link>
         </li>
       </ul>
     </div>
@@ -77,16 +80,8 @@ export default {
   },
 
   methods: {
-    ...mapMutations(['setApplication']),
-
     ...mapActions(['addUserApplication',
       'fetchApplications', 'fetchUserApplications']),
-
-    configure(data) {
-      console.log(data);
-
-      this.setApplication(data.application);
-    }
   },
 
   computed: {
@@ -109,14 +104,6 @@ export default {
   beforeMount() {
     this.fetchApplications();
     this.fetchUserApplications();
-  },
-
-  created() {
-    const { configure } = this;
-
-    window.HEADER = {
-      configure
-    };
   }
 };
 </script>

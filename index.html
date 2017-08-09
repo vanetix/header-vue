@@ -11,15 +11,20 @@
     <div id="directory-header"></div>
     <script src="/dist/build.js"></script>
     <script>
-      HEADER.configure({
-        application: {
-          name: "Polaris",
-          href: "https://www.google.com"
-        },
+      initializeHeader({
+       application: {
+         name: "Polaris",
+         href: "https://www.google.com"
+       },
 
-        userLinks: [
+       user: {
+         name: "Jimmy John",
+         role: "Sandwichteer",
+       },
 
-        ]
+       userLinks: [
+
+       ]
       });
     </script>
   </body>

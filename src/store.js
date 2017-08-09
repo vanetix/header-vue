@@ -17,7 +17,8 @@ const state = {
   user: {
     name: "Billy Bob",
     role: "Super duper admin",
-    avatar: "https://www.placecage.com/c/40/40"
+    avatar: "https://www.placecage.com/c/40/40",
+    token: ""
   },
   application: {
     name: "Card Catalog",
@@ -50,6 +51,15 @@ const mutations = {
     state.application = {
       name,
       href
+    };
+  },
+
+  setUser(state, { name, role, avatar, token }) {
+    state.user = {
+      name,
+      role,
+      avatar,
+      token
     };
   },
 
@@ -113,19 +123,61 @@ const mutations = {
         clientId: attributes['client-id']
       };
     });
+  },
+
+  addUserApplication(state, { data }) {
+    const { id, attributes } = data;
+
+    state.userApplications.push({
+      id,
+      userId: attributes['user-id'],
+      clientId: attributes['client-id']
+    });
+  },
+
+  removeUserApplication(state, clientId) {
+    const apps = state.userApplications;
+
+    state.userApplications = apps.filter((ua) => ua.clientId !== clientId);
   }
 };
 
 const actions = {
-  addUserApplication({ commit, state }, data) {
-    const applications = state.userApplications;
-    const found = applications.some((a) => a.name === data.name);
+  addUserApplication({ commit, state }, clientId) {
+    const { token } = state.user;
+    const found = state.userApplications.some((a) => a.clientId === clientId);
 
     if (!found) {
-      userApplications.push(data);
+      axios.post("http://localhost:4000/me", {
+        data: {
+          attributes: {
+            'client-id': clientId
+          }
+        }
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }).then(({ data }) => {
+        commit('addUserApplication', data);
+      }, (error) => {
+        console.error(error);
+      });
     }
+  },
 
-    commit('setUserApplications', userApplications);
+  removeUserApplication({ commit, state}, clientId) {
+    const { token } = state.user;
+
+    axios.delete(`http://localhost:4000/me/${clientId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }).then(() => {
+      commit('removeUserApplication', clientId)
+    }, (error) => {
+      console.error(error);
+    });
   },
 
   fetchApplications({ commit, state }) {
@@ -154,6 +206,11 @@ const actions = {
     }, (error) => {
       console.error(error);
     });
+  },
+
+  initialize({ commit }, { application, user }) {
+    commit('setUser', user);
+    commit('setApplication', application);
   }
 };
 
